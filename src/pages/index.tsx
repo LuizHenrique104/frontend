@@ -8,12 +8,13 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
   const [formData, setFormData] = useState({
     value: '',
-    date: ''
+    date: new Date().toISOString().split('T')[0]
   })
 
   useEffect(() => {
     fetchPurchases()
   }, [])
+  
 
   const fetchPurchases = async () => {
     try {
@@ -33,8 +34,8 @@ export default function Home() {
     try {
       const newPurchase = {
         id: crypto.randomUUID(),
-        value: Number(formData.value),
-        date: formData.date
+        value: Number(formData.value) / 100,
+        date: formData.date || new Date().toISOString().split('T')[0]
       }
 
       const res = await fetch('/api/purchases', {
@@ -44,7 +45,7 @@ export default function Home() {
       })
 
       if (res.ok) {
-        setFormData({ value: '', date: '' })
+        setFormData({ value: '', date: new Date().toISOString().split('T')[0] })
         try {
           const created = await res.json()
           if (created && created.id) {
@@ -63,6 +64,10 @@ export default function Home() {
     } catch (error) {
       console.error('Erro ao salvar compra:', error)
     }
+  }
+
+  const unmaskMoney = (value: string) => {
+    return value.replace(/\D/g, '')
   }
 
   const formatCurrency = (value: number) => {
@@ -180,16 +185,19 @@ export default function Home() {
                       Valor
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] text-white/20 font-500 select-none">
-                        R$
-                      </span>
                       <input
-                        type="number"
-                        step="0.01"
-                        value={formData.value}
-                        onChange={(e) => setFormData({ ...formData, value: e.target.value })}
-                        placeholder="0,00"
-                        className="w-full bg-white/4 border border-white/8 hover:border-white/[0.14] rounded-xl pl-9 pr-4 py-2.5 text-white text-[14px] font-400 placeholder:text-white/15 focus:outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all"
+                        type="text"
+                        value={
+                          formData.value
+                            ? formatCurrency(Number(formData.value) / 100)
+                            : ''
+                        }
+                        onChange={(e) => {
+                          const raw = unmaskMoney(e.target.value)
+                          setFormData({ ...formData, value: raw })
+                        }}
+                        placeholder="R$ 0,00"
+                        className="w-full bg-white/4 border border-white/8 hover:border-white/[0.14] rounded-xl pl-4 pr-4 py-2.5 text-white text-[14px] font-400 placeholder:text-white/15 focus:outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all"
                         required
                       />
                     </div>
@@ -204,7 +212,6 @@ export default function Home() {
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                       className="w-full bg-white/4 border border-white/8 hover:border-white/[0.14] rounded-xl px-4 py-2.5 text-white text-[14px] font-400 focus:outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all"
-                      required
                     />
                   </div>
                 </div>
