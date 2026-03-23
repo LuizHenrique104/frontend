@@ -34,7 +34,7 @@ export default function Home() {
       const newPurchase = {
         id: crypto.randomUUID(),
         value: Number(formData.value),
-        date: formData.date // send date as YYYY-MM-DD to avoid timezone shifts
+        date: formData.date
       }
 
       const res = await fetch('/api/purchases', {
@@ -91,63 +91,96 @@ export default function Home() {
     }
   }
 
+  const total = purchases.reduce((sum, p) => sum + p.value, 0)
+
   return (
     <>
       <Head>
         <title>Controle de Compras</title>
         <meta name="description" content="Controle suas compras de forma simples" />
         <link rel="icon" href="/favicon.ico" />
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
         <style>{`
           *, body { font-family: 'Plus Jakarta Sans', sans-serif; }
-          input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.35); cursor: pointer; }
+          input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(1) opacity(0.3); cursor: pointer; }
           input[type=number]::-webkit-inner-spin-button,
           input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
           input[type=number] { -moz-appearance: textfield; }
+          @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+          }
+          .fade-up { animation: fadeUp 0.35s ease both; }
         `}</style>
       </Head>
 
-      <div className="min-h-screen bg-[#111318]">
+      <div className="min-h-screen bg-[#0e0f13]">
 
-        {/* Subtle top accent line */}
-        <div className="h-[3px] w-full bg-gradient-to-r from-violet-500 via-blue-400 to-cyan-400" />
+        {/* Background texture */}
+        <div className="fixed inset-0 pointer-events-none overflow-hidden">
+          <div className="absolute -top-64 -left-64 w-175 h-175 rounded-full bg-violet-600/10 blur-[120px]" />
+          <div className="absolute -bottom-64 -right-32 w-125 h-125 rounded-full bg-blue-600/8 blur-[100px]" />
+          <div
+            className="absolute inset-0 opacity-[0.025]"
+            style={{
+              backgroundImage: 'linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)',
+              backgroundSize: '40px 40px'
+            }}
+          />
+        </div>
 
-        <div className="max-w-2xl mx-auto px-6 py-12">
+        <div className="relative z-10 max-w-160 mx-auto px-6 pt-14 pb-16">
 
           {/* Header */}
-          <header className="mb-10">
-            <div className="flex items-center gap-2 mb-6">
-              <div className="w-1.5 h-5 rounded-full bg-gradient-to-b from-violet-400 to-blue-400" />
-              <span className="text-[11px] font-600 tracking-[0.15em] uppercase text-white/30">
-                Finanças
-              </span>
+          <header className="mb-12">
+            <div className="flex items-start justify-between">
+              <div>
+                <p className="text-[11px] font-600 tracking-[0.18em] uppercase text-violet-400/70 mb-3">
+                  Controle Financeiro
+                </p>
+                <h1 className="text-[38px] font-800 leading-[1.1] text-white tracking-tight mb-2">
+                  Minhas Compras
+                </h1>
+                <p className="text-[13px] text-white/30 font-300">
+                  Registre e acompanhe seus gastos
+                </p>
+              </div>
+
+              {/* Total — top right */}
+              {!loading && purchases.length > 0 && (
+                <div className="fade-up text-right mt-1">
+                  <p className="text-[10px] font-600 tracking-widest uppercase text-white/25 mb-1.5">Total</p>
+                  <p className="text-[26px] font-700 leading-none text-white tracking-tight">
+                    {formatCurrency(total)}
+                  </p>
+                  <p className="text-[11px] text-white/25 mt-1.5 font-400">
+                    {purchases.length} {purchases.length === 1 ? 'registro' : 'registros'}
+                  </p>
+                </div>
+              )}
             </div>
-            <h1 className="text-[32px] font-700 text-white leading-tight tracking-tight mb-2">
-              Controle de Compras
-            </h1>
-            <p className="text-[14px] text-white/35 font-300 leading-relaxed">
-              Registre e acompanhe suas despesas
-            </p>
+
+            {/* Divider */}
+            <div className="mt-8 h-px bg-linear-to-r from-violet-500/40 via-white/10 to-transparent" />
           </header>
 
-          <main className="space-y-3">
+          <main className="space-y-4">
 
-            {/* Form Card */}
-            <div className="bg-[#181b22] border border-white/[0.06] rounded-2xl p-6">
-
-              <p className="text-[12px] font-600 tracking-[0.12em] uppercase text-white/30 mb-5">
-                Nova entrada
+            {/* ── Form Card ── */}
+            <div className="rounded-2xl bg-white/3 border border-white/[0.07] p-6 shadow-xl shadow-black/20">
+              <p className="text-[11px] font-600 tracking-[0.15em] uppercase text-white/25 mb-5">
+                Nova compra
               </p>
 
-              <form onSubmit={handleSubmit}>
-                <div className="grid grid-cols-2 gap-3 mb-5">
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
 
                   <div>
-                    <label className="block text-[11px] font-500 text-white/30 tracking-wide uppercase mb-2">
+                    <label className="block text-[11px] font-500 text-white/30 mb-1.5 tracking-wide">
                       Valor
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/25 text-sm font-500">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[13px] text-white/20 font-500 select-none">
                         R$
                       </span>
                       <input
@@ -156,129 +189,129 @@ export default function Home() {
                         value={formData.value}
                         onChange={(e) => setFormData({ ...formData, value: e.target.value })}
                         placeholder="0,00"
-                        className="w-full bg-[#111318] border border-white/[0.08] rounded-xl pl-10 pr-4 py-3 text-white text-[14px] font-400 placeholder:text-white/20 focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/[0.04] transition-all"
+                        className="w-full bg-white/4 border border-white/8 hover:border-white/[0.14] rounded-xl pl-9 pr-4 py-2.5 text-white text-[14px] font-400 placeholder:text-white/15 focus:outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all"
                         required
                       />
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-500 text-white/30 tracking-wide uppercase mb-2">
+                    <label className="block text-[11px] font-500 text-white/30 mb-1.5 tracking-wide">
                       Data
                     </label>
                     <input
                       type="date"
                       value={formData.date}
                       onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                      className="w-full bg-[#111318] border border-white/[0.08] rounded-xl px-4 py-3 text-white text-[14px] font-400 focus:outline-none focus:border-violet-500/50 focus:bg-violet-500/[0.04] transition-all"
+                      className="w-full bg-white/4 border border-white/8 hover:border-white/[0.14] rounded-xl px-4 py-2.5 text-white text-[14px] font-400 focus:outline-none focus:border-violet-500/60 focus:bg-violet-500/5 transition-all"
                       required
                     />
                   </div>
-
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-violet-600 hover:bg-violet-500 active:bg-violet-700 text-white text-[13px] font-600 tracking-wide py-3 rounded-xl transition-all duration-150"
+                  className="w-full rounded-xl py-2.5 text-[13px] font-700 text-white tracking-wide bg-linear-to-r from-violet-600 to-violet-500 hover:from-violet-500 hover:to-violet-400 shadow-lg shadow-violet-900/40 transition-all active:scale-[0.99]"
                 >
-                  Adicionar
+                  Adicionar compra
                 </button>
               </form>
             </div>
 
-            {/* List Card */}
-            <div className="bg-[#181b22] border border-white/[0.06] rounded-2xl overflow-hidden">
+            {/* ── List Card ── */}
+            <div className="rounded-2xl bg-white/3 border border-white/[0.07] overflow-hidden shadow-xl shadow-black/20">
 
               {/* List header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/[0.05]">
-                <p className="text-[12px] font-600 tracking-[0.12em] uppercase text-white/30">
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/5">
+                <p className="text-[11px] font-600 tracking-[0.15em] uppercase text-white/25">
                   Histórico
                 </p>
                 {!loading && purchases.length > 0 && (
-                  <span className="text-[11px] font-500 text-white/20 bg-white/[0.04] border border-white/[0.06] px-2.5 py-1 rounded-full">
-                    {purchases.length} {purchases.length === 1 ? 'item' : 'itens'}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-400/70" />
+                    <span className="text-[11px] text-white/25 font-400">
+                      {purchases.length} {purchases.length === 1 ? 'item' : 'itens'}
+                    </span>
+                  </div>
                 )}
               </div>
 
-              {/* List body */}
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-3">
-                  <div className="w-5 h-5 rounded-full border-2 border-white/10 border-t-violet-500 animate-spin" />
-                  <p className="text-[13px] text-white/20">Carregando...</p>
+                <div className="flex flex-col items-center py-16 gap-3">
+                  <div className="w-5 h-5 rounded-full border-[1.5px] border-white/10 border-t-violet-400 animate-spin" />
+                  <p className="text-[12px] text-white/20 font-400">Carregando...</p>
                 </div>
               ) : purchases.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center mb-1">
+                <div className="flex flex-col items-center py-16 gap-2 text-center px-8">
+                  <div className="w-12 h-12 rounded-2xl bg-white/3 border border-white/[0.07] flex items-center justify-center mb-2">
                     <svg className="w-5 h-5 text-white/20" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                     </svg>
                   </div>
-                  <p className="text-[13px] text-white/25 font-400">Nenhuma compra ainda</p>
-                  <p className="text-[12px] text-white/15">Adicione sua primeira entrada acima</p>
+                  <p className="text-[13px] text-white/25 font-500">Nenhuma compra registrada</p>
+                  <p className="text-[12px] text-white/15 font-300">Use o formulário acima para adicionar</p>
                 </div>
               ) : (
-                <div>
-                  {purchases.map((purchase, index) => (
-                    <div
-                      key={purchase.id}
-                      className="group flex items-center justify-between px-6 py-4 border-b border-white/[0.04] last:border-b-0 hover:bg-white/[0.02] transition-colors"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      {/* Left: index + info */}
-                      <div className="flex items-center gap-4">
-                        <span className="text-[11px] font-500 text-white/15 w-5 text-right tabular-nums">
-                          {String(index + 1).padStart(2, '0')}
-                        </span>
-                        <div className="w-px h-6 bg-white/[0.06]" />
-                        <div>
-                          <p className="text-[15px] font-600 text-white tabular-nums">
-                            {formatCurrency(purchase.value)}
-                          </p>
-                          <p className="text-[12px] text-white/30 mt-0.5">
-                            {formatDate(purchase.date)}
-                          </p>
-                        </div>
-                      </div>
+                purchases.map((purchase, index) => (
+                  <div
+                    key={purchase.id}
+                    className="group fade-up flex items-center gap-4 px-6 py-4 border-b border-white/4 last:border-b-0 hover:bg-white/25 transition-colors"
+                    style={{ animationDelay: `${index * 40}ms` }}
+                  >
+                    <span className="text-[11px] font-400 text-white/15 tabular-nums w-4 shrink-0">
+                      {index + 1}
+                    </span>
 
-                      {/* Right: id + delete */}
-                      <div className="flex items-center gap-3">
-                        <span className="hidden sm:block text-[10px] font-400 text-white/15 tracking-wider">
-                          #{purchase.id.slice(0, 8)}
-                        </span>
-                        <button
-                          onClick={async () => {
-                            if (!confirm('Confirma exclusão desta compra?')) return
-                            try {
-                              const res = await fetch(`/api/purchases?id=${encodeURIComponent(purchase.id)}`, { method: 'DELETE' })
-                              if (res.ok) {
-                                setPurchases((prev) => prev.filter((p) => p.id !== purchase.id))
-                              } else {
-                                const err = await res.json().catch(() => ({}))
-                                alert('Falha ao deletar: ' + (err.error || JSON.stringify(err)))
-                              }
-                            } catch (err) {
-                              console.error('Erro ao deletar:', err)
-                              alert('Erro ao deletar')
-                            }
-                          }}
-                          className="opacity-0 group-hover:opacity-100 text-[11px] font-500 text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/40 hover:bg-red-400/[0.06] px-3 py-1 rounded-lg transition-all"
-                          aria-label={`Deletar compra ${purchase.id}`}
-                        >
-                          Excluir
-                        </button>
-                      </div>
+                    <div className="w-2 h-2 rounded-full bg-violet-400/50 shrink-0" />
+
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[15px] font-600 text-white tabular-nums leading-none">
+                        {formatCurrency(purchase.value)}
+                      </p>
+                      <p className="text-[11px] text-white/30 mt-1 tabular-nums font-400">
+                        {formatDate(purchase.date)}
+                      </p>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="flex items-center gap-3 shrink-0">
+                      <span className="hidden sm:inline text-[10px] text-white/15 font-300 tracking-wider">
+                        #{purchase.id.slice(0, 8)}
+                      </span>
+                      <button
+                        onClick={async () => {
+                          if (!confirm('Confirma exclusão desta compra?')) return
+                          try {
+                            const res = await fetch(`/api/purchases?id=${encodeURIComponent(purchase.id)}`, { method: 'DELETE' })
+                            if (res.ok) {
+                              setPurchases((prev) => prev.filter((p) => p.id !== purchase.id))
+                            } else {
+                              const err = await res.json().catch(() => ({}))
+                              alert('Falha ao deletar: ' + (err.error || JSON.stringify(err)))
+                            }
+                          } catch (err) {
+                            console.error('Erro ao deletar:', err)
+                            alert('Erro ao deletar')
+                          }
+                        }}
+                        className="opacity-0 group-hover:opacity-100 text-[11px] font-500 text-red-400/50 hover:text-red-400 border border-red-400/15 hover:border-red-400/40 hover:bg-red-400/6 px-2.5 py-1 rounded-lg transition-all"
+                        aria-label={`Deletar compra ${purchase.id}`}
+                      >
+                        Excluir
+                      </button>
+                    </div>
+                  </div>
+                ))
               )}
 
-              {/* Summary footer */}
+              {/* Summary row */}
               {!loading && purchases.length > 0 && (
-                <div className="flex items-center justify-between px-6 py-4 bg-white/[0.02] border-t border-white/[0.06]">
-                  <p className="text-[12px] text-white/25 font-400">Total</p>
-                  <p className="text-[18px] font-700 text-white tabular-nums">
-                    {formatCurrency(purchases.reduce((sum, p) => sum + p.value, 0))}
+                <div className="flex items-center justify-between px-6 py-4 bg-white/2.5 border-t border-white/[0.07]">
+                  <div className="flex items-center gap-2">
+                    <div className="w-1 h-4 rounded-full bg-linear-to-b from-violet-400 to-blue-400" />
+                    <p className="text-[12px] text-white/35 font-400">Total acumulado</p>
+                  </div>
+                  <p className="text-[20px] font-700 text-white leading-none tracking-tight">
+                    {formatCurrency(total)}
                   </p>
                 </div>
               )}
@@ -286,9 +319,8 @@ export default function Home() {
 
           </main>
 
-          {/* Footer */}
-          <footer className="text-center mt-10">
-            <p className="text-[11px] text-white/15">© 2026 Controle de Compras</p>
+          <footer className="text-center mt-12">
+            <p className="text-[11px] text-white/15 tracking-wide font-300">© 2026 Controle de Compras</p>
           </footer>
 
         </div>
